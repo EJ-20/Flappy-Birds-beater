@@ -38,7 +38,7 @@ class Bird:
     def __init__(self, x, y): #constructor
         self.x = x
         self.y = y
-        self.height = y
+        self.height = self.y
         self.frame_count = 0
         self.tilt = 0
         self.vel = 0
@@ -130,7 +130,7 @@ class Pipe:
         bottom_offset = (self.x - bird.x, self.bottom - round(bird.y))
 
         top_overlap = bird_mask.overlap(top_pipe_mask, top_offset)
-        bottom_overlap = (bird_mask.overlap(bottom_pipe_mask, bottom_offset))
+        bottom_overlap = bird_mask.overlap(bottom_pipe_mask, bottom_offset)
 
         if top_overlap or bottom_overlap:
             return True
@@ -145,7 +145,6 @@ class Base:
         self.y = y
         self.x1 = 0
         self.x2 = self.WIDTH
-
 
     def move(self):
         self.x1 -= self.VEL
@@ -171,9 +170,14 @@ def draw_window(win, birds, pipes, base, score, GEN, pipe_ind):
     for bird in birds:
         if DRAW_LINES:
             try:
-                pygame.draw.line(win, (255,0,0),(bird.x + bird.img.get_width() /2, bird.y + bird.img.get_height()/2), (pipes[pipe_ind].x + pipes[pipe_ind].TOP_PIPE.get_width()/2, pipes[pipe_ind].height), 5)
-                pygame.draw.line(win, (255,0,0), bird.x + bird.img.get_width()/2, bird.y + bird.img.get_height()/2, (pipes[pipe_ind].x + pipes[pipe_ind].BOTTOM_PIPE.get_width()/2, pipes[pipe_ind].bottom), 5)
-
+                pygame.draw.line(win, (255, 0, 0),
+                                 (bird.x + bird.img.get_width() / 2, bird.y + bird.img.get_height() / 2),
+                                 (pipes[pipe_ind].x + pipes[pipe_ind].TOP_PIPE.get_width() / 2, pipes[pipe_ind].height),
+                                 5)
+                pygame.draw.line(win, (255, 0, 0),
+                                 (bird.x + bird.img.get_width() / 2, bird.y + bird.img.get_height() / 2), (
+                                     pipes[pipe_ind].x + pipes[pipe_ind].BOTTOM_PIPE.get_width() / 2,
+                                     pipes[pipe_ind].bottom), 5)
             except:
                 pass
         bird.draw(win)
@@ -232,31 +236,29 @@ def main(genomes, config):
             if output[0] > 0.5:
                 bird.jump()
 
-            for pipe in pipes:
+        for pipe in pipes:
+            for x, bird in enumerate(birds):
+                # checking if the bird has hit the ground or if the pipe and bird collide or if the bird has touched te top boundary
                 if pipe.collide(bird) or (bird.y + bird.img.get_height() >= 630 or bird.y < 0):
-                    ge[x].fitness -= 1
+                    ge[x].fitness -= 1  # remove all things of that bird from that bird's position
                     birds.pop(x)
                     ge.pop(x)
                     neural_networks.pop(x)
 
-                if not pipe.passed and bird.x > pipe.x:
+                if not pipe.passed and bird.x > pipe.x:  # if the passed is not set to true and bird has passed the pipe then set it to true
                     pipe.passed = True
                     for g in ge:
-                        g.fitness += 5
-                        score += 1
+                        g.fitness += 5  # adding fitness to birds which passed
+                    score += 1
+                    pipes.append(Pipe(500))  # add another pipe
 
-            base_object.move()
-            draw_window(win, birds, pipes, base_object, score, GEN, pipe_ind)
-
-        # Remove pipes that have moved off-screen
-        for pipe in pipes:
-            if pipe.x + pipe.TOP_PIPE.get_width() < 0:
+            if pipe.x + pipe.TOP_PIPE.get_width() < 0:  # if pipe passed the screen remove it
                 pipes.remove(pipe)
 
-        # Add a new pipe if necessary
-        if len(pipes) < 2:
-            pipes.append(Pipe(500))
+            pipe.move()
 
+        base_object.move()
+        draw_window(win, birds, pipes, base_object, score, GEN, pipe_ind)
 
 
 def run(config_path):
@@ -274,8 +276,3 @@ if __name__ == '__main__':
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'config-feedforward.txt')
     run(config_path)
-
-
-
-
-
